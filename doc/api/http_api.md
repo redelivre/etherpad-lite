@@ -61,7 +61,7 @@ Portal submits content into new blog post
 ## Usage
 
 ### API version
-The latest version is `1.2.8`
+The latest version is `1.2.13`
 
 The current version can be queried via /api.
 
@@ -232,7 +232,7 @@ creates a new session. validUntil is an unix timestamp in seconds
 deletes a session
 
 *Example returns:*
-  * `{code: 1, message:"ok", data: null}`
+  * `{code: 0, message:"ok", data: null}`
   * `{code: 1, message:"sessionID does not exist", data: null}`
 
 #### getSessionInfo(sessionID)
@@ -279,6 +279,16 @@ returns the text of a pad
  * API >= 1
 
 sets the text of a pad
+
+*Example returns:*
+  * `{code: 0, message:"ok", data: null}`
+  * `{code: 1, message:"padID does not exist", data: null}`
+  * `{code: 1, message:"text too long", data: null}`
+
+#### appendText(padID, text)
+ * API >= 1.2.13
+
+appends text to a pad
 
 *Example returns:*
   * `{code: 0, message:"ok", data: null}`
@@ -353,6 +363,15 @@ returns an object of diffs from 2 points in a pad
   * `{"code":0,"message":"ok","data":{"html":"<style>\n.authora_HKIv23mEbachFYfH {background-color: #a979d9}\n.authora_n4gEeMLsv1GivNeh {background-color: #a9b5d9}\n.removed {text-decoration: line-through; -ms-filter:'progid:DXImageTransform.Microsoft.Alpha(Opacity=80)'; filter: alpha(opacity=80); opacity: 0.8; }\n</style>Welcome to Etherpad!<br><br>This pad text is synchronized as you type, so that everyone viewing this page sees the same text. This allows you to collaborate seamlessly on documents!<br><br>Get involved with Etherpad at <a href=\"http&#x3a;&#x2F;&#x2F;etherpad&#x2e;org\">http:&#x2F;&#x2F;etherpad.org</a><br><span class=\"authora_HKIv23mEbachFYfH\">aw</span><br><br>","authors":["a.HKIv23mEbachFYfH",""]}}`
   * `{"code":4,"message":"no or wrong API Key","data":null}`
 
+#### restoreRevision(padId, rev)
+ * API >= 1.2.11
+
+Restores revision from past as new changeset
+
+*Example returns:*
+  * {code:0, message:"ok", data:null}
+  * {code: 1, message:"padID does not exist", data: null}
+
 ### Chat
 #### getChatHistory(padID, [start, end])
  * API >= 1.2.7
@@ -380,6 +399,16 @@ returns the chatHead (last number of the last chat-message) of the pad
 * `{code: 0, message:"ok", data: {chatHead: 42}}`
 * `{code: 1, message:"padID does not exist", data: null}`
 
+#### appendChatMessage(padID, text, authorID [, time])
+ * API >= 1.2.12
+
+creates a chat message, saves it to the database and sends it to all connected clients of this pad
+
+
+*Example returns:*
+
+* `{code: 0, message:"ok", data: null}`
+* `{code: 1, message:"text is no string", data: null}`
 
 ### Pad
 Group pads are normal pads, but with the name schema GROUPID$PADNAME. A security manager controls access of them and its forbidden for normal pads to include a $ in the name. 
@@ -388,10 +417,12 @@ Group pads are normal pads, but with the name schema GROUPID$PADNAME. A security
  * API >= 1
 
 creates a new (non-group) pad.  Note that if you need to create a group Pad, you should call **createGroupPad**.
+You get an error message if you use one of the following characters in the padID: "/", "?", "&" or "#".
 
 *Example returns:*
   * `{code: 0, message:"ok", data: null}`
-  * `{code: 1, message:"pad does already exist", data: null}`
+  * `{code: 1, message:"padID does already exist", data: null}`
+  * `{code: 1, message:"malformed padID: Remove special characters", data: null}`
 
 #### getRevisionsCount(padID)
  * API >= 1
@@ -400,6 +431,33 @@ returns the number of revisions of this pad
 
 *Example returns:*
   * `{code: 0, message:"ok", data: {revisions: 56}}`
+  * `{code: 1, message:"padID does not exist", data: null}`
+
+#### getSavedRevisionsCount(padID)
+ * API >= 1.2.11
+
+returns the number of saved revisions of this pad
+
+*Example returns:*
+  * `{code: 0, message:"ok", data: {savedRevisions: 42}}`
+  * `{code: 1, message:"padID does not exist", data: null}`
+
+#### listSavedRevisions(padID)
+ * API >= 1.2.11
+
+returns the list of saved revisions of this pad
+
+*Example returns:*
+  * `{code: 0, message:"ok", data: {savedRevisions: [2, 42, 1337]}}`
+  * `{code: 1, message:"padID does not exist", data: null}`
+
+#### saveRevision(padID [, rev])
+ * API >= 1.2.11
+
+saves a revision
+
+*Example returns:*
+  * `{code: 0, message:"ok", data: null}`
   * `{code: 1, message:"padID does not exist", data: null}`
 
 #### padUsersCount(padID)
@@ -453,6 +511,15 @@ returns the read only link of a pad
 
 *Example returns:*
   * `{code: 0, message:"ok", data: {readOnlyID: "r.s8oes9dhwrvt0zif"}}`
+  * `{code: 1, message:"padID does not exist", data: null}`
+
+#### getPadID(readOnlyID)
+ * API >= 1.2.10
+
+returns the id of a pad which is assigned to the readOnlyID
+
+*Example returns:*
+  * `{code: 0, message:"ok", data: {padID: "p.s8oes9dhwrvt0zif"}}`
   * `{code: 1, message:"padID does not exist", data: null}`
 
 #### setPublicStatus(padID, publicStatus)
